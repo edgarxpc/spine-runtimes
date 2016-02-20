@@ -1,25 +1,26 @@
 /******************************************************************************
  * Spine Runtimes Software License
- * Version 2.1
+ * Version 2.3
  * 
- * Copyright (c) 2013, Esoteric Software
+ * Copyright (c) 2013-2015, Esoteric Software
  * All rights reserved.
  * 
  * You are granted a perpetual, non-exclusive, non-sublicensable and
- * non-transferable license to install, execute and perform the Spine Runtimes
- * Software (the "Software") solely for internal use. Without the written
- * permission of Esoteric Software (typically granted by licensing Spine), you
- * may not (a) modify, translate, adapt or otherwise create derivative works,
- * improvements of the Software or develop new applications using the Software
- * or (b) remove, delete, alter or obscure any trademarks or any copyright,
- * trademark, patent or other intellectual property or proprietary rights
- * notices on or in the Software, including any copy thereof. Redistributions
- * in binary or source form must include this license and terms.
+ * non-transferable license to use, install, execute and perform the Spine
+ * Runtimes Software (the "Software") and derivative works solely for personal
+ * or internal use. Without the written permission of Esoteric Software (see
+ * Section 2 of the Spine Software License Agreement), you may not (a) modify,
+ * translate, adapt or otherwise create derivative works, improvements of the
+ * Software or develop new applications using the Software or (b) remove,
+ * delete, alter or obscure any trademarks or any copyright, trademark, patent
+ * or other intellectual property or proprietary rights notices on or in the
+ * Software, including any copy thereof. Redistributions in binary or source
+ * form must include this license and terms.
  * 
  * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL ESOTERIC SOFTARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
@@ -32,12 +33,9 @@ package spine.flash {
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.display.BlendMode;
-import flash.display.DisplayObject;
-import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.geom.ColorTransform;
-import flash.geom.Matrix;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 import flash.utils.getTimer;
@@ -50,8 +48,8 @@ import spine.atlas.AtlasRegion;
 import spine.attachments.RegionAttachment;
 
 public class SkeletonSprite extends Sprite {
-	static private var tempPoint:Point = new Point();
-	static private var tempMatrix:Matrix = new Matrix();
+	static private var blendModes:Vector.<String> = new <String>[
+		BlendMode.NORMAL, BlendMode.ADD, BlendMode.MULTIPLY, BlendMode.SCREEN];
 
 	private var _skeleton:Skeleton;
 	public var timeScale:Number = 1;
@@ -97,6 +95,7 @@ public class SkeletonSprite extends Sprite {
 					bitmap.rotation = -regionAttachment.rotation;
 					bitmap.scaleX = regionAttachment.scaleX * (regionAttachment.width / region.width);
 					bitmap.scaleY = regionAttachment.scaleY * (regionAttachment.height / region.height);
+					
 
 					// Position using attachment translation, shifted as if scale and rotation were at image center.
 					var radians:Number = -regionAttachment.rotation * Math.PI / 180;
@@ -118,7 +117,7 @@ public class SkeletonSprite extends Sprite {
 					regionAttachment["wrapper"] = wrapper;
 				}
 
-				wrapper.blendMode = slot.data.additiveBlending ? BlendMode.ADD : BlendMode.NORMAL;
+				wrapper.blendMode = blendModes[slot.data.blendMode.ordinal];
 
 				var colorTransform:ColorTransform = wrapper.transform.colorTransform;
 				colorTransform.redMultiplier = skeleton.r * slot.r * regionAttachment.r;
@@ -127,13 +126,13 @@ public class SkeletonSprite extends Sprite {
 				colorTransform.alphaMultiplier = skeleton.a * slot.a * regionAttachment.a;
 				wrapper.transform.colorTransform = colorTransform;
 
+				var bone:Bone = slot.bone;
 				var flipX:int = skeleton.flipX ? -1 : 1;
 				var flipY:int = skeleton.flipY ? -1 : 1;
 
-				var bone:Bone = slot.bone;
 				wrapper.x = bone.worldX;
 				wrapper.y = bone.worldY;
-				wrapper.rotation = -bone.worldRotation * flipX * flipY;
+				wrapper.rotation = bone.worldRotationX * flipX * flipY;
 				wrapper.scaleX = bone.worldScaleX * flipX;
 				wrapper.scaleY = bone.worldScaleY * flipY;
 				addChild(wrapper);
